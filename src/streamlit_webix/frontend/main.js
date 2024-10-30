@@ -3,10 +3,6 @@
 // If you get an error about "Streamlit" not being defined, that
 // means you're missing that file.
 
-function sendValue(value) {
-  Streamlit.setComponentValue(value)
-}
-
 /**
  * The component's render function. This will be called imediately after
  * the component is initially loaded, and then again every time the
@@ -15,8 +11,16 @@ function sendValue(value) {
 function onRender(event) {
   // Only run the render code the first time the component is loaded.
   if (!window.rendered) {
-    const {config, height} = event.detail.args;
-    console.log("args", event.detail.args);
+    let args = event.detail.args;
+    let config = structuredClone(args.config);
+    let height = args.height;
+
+    if (args.allow_unsafe_jscode) {
+      console.warn("flag allow_unsafe_jscode is on.")
+      gridOptions = deepMap(gridOptions, parseJsCodeFromPython)
+    }
+
+    console.log("args", args);
     // You most likely want to get the data passed in like this
     // const {input1, input2, input3} = event.detail.args
 
@@ -30,12 +34,57 @@ function onRender(event) {
     } else {
       Streamlit.setFrameHeight(200);
     }
-    // You'll most likely want to pass some data back to Python like this
-    // sendValue({output1: "foo", output2: "bar"})
     window.rendered = true
   }
 }
 
+// stole from https://github.com/andfanilo/streamlit-echarts/blob/master/streamlit_echarts/frontend/src/utils.js Thanks andfanilo
+function mapObject(obj, fn, keysToIgnore) {
+    let keysToMap = Object.keys(obj)
+    return keysToMap.reduce((res, key) => {
+        if (!keysToIgnore.includes(key)) {
+            res[key] = fn(obj[key]);
+            return res
+        }
+        res[key] = obj[key];
+        return res
+
+    }, {})
+}
+
+function deepMap(obj, fn, keysToIgnore = []) {
+    const deepMapper = (val) =>
+        val !== null && typeof val === "object" ? deepMap(val, fn) : fn(val)
+    if (Array.isArray(obj)) {
+        return obj.map(deepMapper)
+    }
+    if (typeof obj === "object") {
+        return mapObject(obj, deepMapper, keysToIgnore)
+    }
+    return obj
+}
+
+function parseJsCodeFromPython(v) {
+  const JS_PLACEHOLDER = "::JSCODE::"
+  let funcReg = new RegExp(
+    `${JS_PLACEHOLDER}\\s*((function|class)\\s*.*)\\s*${JS_PLACEHOLDER}`
+  )
+
+  let match = funcReg.exec(v)
+
+  if (match) {
+
+    const funcStr = match[1]
+    // eslint-disable-next-line
+    return new Function("return " + funcStr)()
+  } else {
+    return v
+  }
+}
+
+
+// export Streamlit library (so users can call setComponentValue from JsCode)
+window.Streamlit = Streamlit;
 // Render the component whenever python send a "render event"
 Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onRender)
 // Tell Streamlit that the component is ready to receive events

@@ -17,7 +17,7 @@ _component_func = components.declare_component(
 # stole from https://github.com/andfanilo/streamlit-echarts/blob/master/streamlit_echarts/frontend/src/utils.js Thanks andfanilo
 class JsCode:
     def __init__(self, js_code: str):
-        """Wrapper around a js function to be injected on gridOptions.
+        """Wrapper around a js function to be injected on config.
         code is not checked at all.
         set allow_unsafe_jscode=True on webix.ui call to use it.
         Code is rebuilt on client using new Function Syntax (https://javascript.info/new-function)
@@ -39,7 +39,7 @@ class JsCode:
         self.js_code = f"{js_placeholder}{one_line_jscode}{js_placeholder}"
 
 
-def walk_gridOptions(go, func):
+def walk(config, func):
     """Recursively walk grid options applying func at each leaf node
 
     Args:
@@ -47,28 +47,28 @@ def walk_gridOptions(go, func):
         func (callable): a function to apply at leaf nodes
     """
 
-    if isinstance(go, (Mapping, list)):
-        for i, k in enumerate(go):
-            if isinstance(go[k], Mapping):
-                walk_gridOptions(go[k], func)
-            elif isinstance(go[k], list):
-                for j in go[k]:
-                    walk_gridOptions(j, func)
+    if isinstance(config, (Mapping, list)):
+        for i, k in enumerate(config):
+            if isinstance(config[k], Mapping):
+                walk(config[k], func)
+            elif isinstance(config[k], list):
+                for j in config[k]:
+                    walk(j, func)
             else:
-                go[k] = func(go[k])
+                config[k] = func(config[k])
 
 
 # Create the python function that will be called
 def ui(
     config: Optional[dict] = {},
     height: Optional[int] = None,
-    unsafe_allow_jscode: bool = False,
+    allow_unsafe_jscode: bool = False,
 ):
     """
     Add a descriptive docstring
     """
-    if unsafe_allow_jscode:
-        walk_gridOptions(config, lambda v: v.js_code if isinstance(v, JsCode) else v)
+    if allow_unsafe_jscode:
+        walk(config, lambda v: v.js_code if isinstance(v, JsCode) else v)
 
     component_value = _component_func(config=config, height=height)
 
@@ -118,7 +118,7 @@ def main():
             ]
         },
     }
-    value = ui(config)
+    value = ui(config, allow_unsafe_jscode=True)
 
     st.write(value)
 
