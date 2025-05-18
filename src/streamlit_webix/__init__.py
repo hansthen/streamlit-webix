@@ -70,7 +70,9 @@ def ui(
     if allow_unsafe_jscode:
         walk(config, lambda v: v.js_code if isinstance(v, JsCode) else v)
 
-    component_value = _component_func(config=config, height=height)
+    component_value = _component_func(
+        config=config, height=height, allow_unsafe_jscode=allow_unsafe_jscode
+    )
 
     return component_value
 

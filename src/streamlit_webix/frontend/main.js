@@ -11,30 +11,26 @@
 function onRender(event) {
   // Only run the render code the first time the component is loaded.
   if (!window.rendered) {
+    window.rendered = true
     let args = event.detail.args;
     let config = structuredClone(args.config);
     let height = args.height;
 
     if (args.allow_unsafe_jscode) {
-      console.warn("flag allow_unsafe_jscode is on.")
-      gridOptions = deepMap(gridOptions, parseJsCodeFromPython)
+      config = deepMap(config, parseJsCodeFromPython)
     }
 
-    console.log("args", args);
     // You most likely want to get the data passed in like this
     // const {input1, input2, input3} = event.detail.args
 
     webix.ui(
         config
     );
-    console.log("height", height);
     if(height) {
-      console.log("use set height", height);
       Streamlit.setFrameHeight(height);
     } else {
       Streamlit.setFrameHeight(200);
     }
-    window.rendered = true
   }
 }
 
@@ -67,7 +63,7 @@ function deepMap(obj, fn, keysToIgnore = []) {
 function parseJsCodeFromPython(v) {
   const JS_PLACEHOLDER = "::JSCODE::"
   let funcReg = new RegExp(
-    `${JS_PLACEHOLDER}\\s*((function|class)\\s*.*)\\s*${JS_PLACEHOLDER}`
+    `${JS_PLACEHOLDER}(.*)${JS_PLACEHOLDER}`
   )
 
   let match = funcReg.exec(v)
