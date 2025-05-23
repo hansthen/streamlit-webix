@@ -57,10 +57,11 @@ def walk(config, func):
             else:
                 config[k] = func(config[k])
 
-
 # Create the python function that will be called
 def ui(
     config: Optional[dict] = {},
+    css_link: Optional[str] = "https://cdn.webix.com/edge/webix.css",
+    js_link: Optional[str] = "https://cdn.webix.com/edge/webix.js",
     height: Optional[int] = None,
     allow_unsafe_jscode: bool = False,
 ):
@@ -71,7 +72,11 @@ def ui(
         walk(config, lambda v: v.js_code if isinstance(v, JsCode) else v)
 
     component_value = _component_func(
-        config=config, height=height, allow_unsafe_jscode=allow_unsafe_jscode
+        config=config,
+        height=height,
+        css_link=css_link,
+        js_link=js_link,
+        allow_unsafe_jscode=allow_unsafe_jscode
     )
 
     return component_value

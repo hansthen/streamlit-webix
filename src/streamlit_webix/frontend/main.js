@@ -11,6 +11,16 @@
 function onRender(event) {
   // Only run the render code the first time the component is loaded.
   if (!window.rendered) {
+    const link = document.createElement('link');
+    link.href = config.css_link;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = config.js_link;
+    script.type = "text/javascript";
+    document.head.appendChild(script);
+
     window.rendered = true
     let args = event.detail.args;
     let config = structuredClone(args.config);
