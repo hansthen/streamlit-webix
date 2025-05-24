@@ -11,36 +11,38 @@
 function onRender(event) {
   // Only run the render code the first time the component is loaded.
   if (!window.rendered) {
-    const link = document.createElement('link');
-    link.href = config.css_link;
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-
-    const script = document.createElement('script');
-    script.src = config.js_link;
-    script.type = "text/javascript";
-    document.head.appendChild(script);
-
     window.rendered = true
     let args = event.detail.args;
     let config = structuredClone(args.config);
     let height = args.height;
 
-    if (args.allow_unsafe_jscode) {
-      config = deepMap(config, parseJsCodeFromPython)
-    }
+    const script = document.createElement('script');
+    script.src = args.js_link;
+    script.type = "text/javascript";
+    document.head.appendChild(script);
 
-    // You most likely want to get the data passed in like this
-    // const {input1, input2, input3} = event.detail.args
+    const link = document.createElement('link');
+    link.href = args.css_link;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
 
-    webix.ui(
+    script.addEventListener('load', () => {
+      if (args.allow_unsafe_jscode) {
+        config = deepMap(config, parseJsCodeFromPython)
+      }
+
+      // You most likely want to get the data passed in like this
+      // const {input1, input2, input3} = event.detail.args
+
+      webix.ui(
         config
-    );
-    if(height) {
-      Streamlit.setFrameHeight(height);
-    } else {
-      Streamlit.setFrameHeight(200);
-    }
+      );
+      if(height) {
+        Streamlit.setFrameHeight(height);
+      } else {
+        Streamlit.setFrameHeight(200);
+      }
+    })
   }
 }
 
