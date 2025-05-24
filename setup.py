@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setuptools.setup(
     name="streamlit-webix",
-    version="0.4.0",
+    version="0.3.1",
     author="Hans Then",
     author_email="hans.then@gmail.com",
     description="Streamlit wrapper for the Webix UI library",
